@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>iServ 1% Club</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <a class="skip" href="#stage">Skip to the game</a>
+
+  <section id="join" class="join">
+    <form id="joinForm" class="join-card" novalidate>
+      <p class="eyebrow">iServ presents</p>
+      <h1 class="brand">The <span>1%</span> Club</h1>
+      <p class="lede">Five questions. Each one is harder than the last. Wrong answers feed the pot. Get all five right to share it.</p>
+      <label for="nameInput">Your name</label>
+      <input id="nameInput" name="name" type="text" maxlength="20" autocomplete="nickname" required aria-describedby="joinError" placeholder="e.g. Ada">
+      <p id="joinError" class="error" role="alert"></p>
+      <button id="joinButton" type="submit" class="primary">Enter the game zone</button>
+      <p class="fine">You start with 1,000 $AGEs. Your name is shown to everyone.</p>
+    </form>
+  </section>
+
+  <div id="game" hidden>
+    <header class="topbar">
+      <p class="brand-sm">The <span>1%</span> Club</p>
+      <div id="pot" class="pot" aria-label="Pot">
+        <span class="pot-label">Pot</span>
+        <span id="potValue" class="pot-value">0</span>
+        <span class="pot-unit">$AGEs</span>
+      </div>
+      <div id="me" class="me"></div>
+    </header>
+
+    <div id="connection" class="connection" role="status" hidden>Connection lost. Reconnecting…</div>
+
+    <main id="table" class="table">
+      <div id="ring" class="ring" aria-hidden="true"></div>
+      <section id="stage" class="stage" tabindex="-1" aria-label="Question area"></section>
+    </main>
+  </div>
+
+  <div id="live" class="sr-only" aria-live="polite"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/dom.js"></script>
+  <script src="/game.js"></script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Host controls - iServ 1% Club</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/admin.css">
+</head>
+<body class="admin">
+  <a class="skip" href="#main">Skip to controls</a>
+
+  <section id="login" class="join" hidden>
+    <form id="loginForm" class="join-card" novalidate>
+      <p class="eyebrow">Host controls</p>
+      <h1 class="brand">The <span>1%</span> Club</h1>
+      <label for="password">Admin password</label>
+      <input id="password" type="password" autocomplete="current-password" required aria-describedby="loginError">
+      <p id="loginError" class="error" role="alert"></p>
+      <button class="primary" type="submit">Sign in</button>
+    </form>
+  </section>
+
+  <div id="app" hidden>
+    <header class="admin-bar">
+      <h1 class="brand-sm">The <span>1%</span> Club <span class="tag">Host</span></h1>
+      <nav aria-label="Sections">
+        <a href="#control">Game</a>
+        <a href="#questions">Questions</a>
+        <a href="#backup">Backup</a>
+      </nav>
+      <button id="logout" type="button" class="ghost">Sign out</button>
+    </header>
+
+    <main id="main" class="admin-main">
+      <p id="notice" class="notice" role="status" hidden></p>
+
+      <section id="control" class="panel" aria-labelledby="controlTitle">
+        <h2 id="controlTitle">Game control</h2>
+        <dl id="status" class="stats"></dl>
+        <div class="actions">
+          <button id="startBtn" type="button" class="primary">Start game</button>
+          <button id="nextBtn" type="button" class="primary" disabled>Next question</button>
+          <button id="resetBtn" type="button" class="ghost">Reset to lobby</button>
+        </div>
+        <p id="controlHint" class="hint"></p>
+        <div id="live-question"></div>
+        <details class="players">
+          <summary id="playersSummary">Players</summary>
+          <ul id="playerList"></ul>
+        </details>
+      </section>
+
+      <section id="questions" class="panel" aria-labelledby="questionsTitle">
+        <h2 id="questionsTitle">Questions</h2>
+        <p class="hint">Tick exactly five to use in the next game. Questions are shown from the highest percentage (easiest) to the lowest (hardest). Equal percentages use the display order.</p>
+        <p id="selectionStatus" class="hint strong" role="status"></p>
+        <div class="table-scroll">
+          <table class="q-table">
+            <caption class="sr-only">Uploaded questions</caption>
+            <thead>
+              <tr>
+                <th scope="col">In game</th>
+                <th scope="col">Image</th>
+                <th scope="col">% right</th>
+                <th scope="col">Order</th>
+                <th scope="col">Answers</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="questionRows"></tbody>
+          </table>
+        </div>
+        <p id="emptyQuestions" class="hint" hidden>No questions yet. Add the first one below.</p>
+
+        <form id="questionForm" class="q-form" novalidate>
+          <h3 id="formTitle">Add a question</h3>
+          <div class="grid2">
+            <div>
+              <label for="qImage">Question image <span class="req">(PNG, JPEG, GIF or WebP, 3 MB max)</span></label>
+              <input id="qImage" type="file" accept="image/png,image/jpeg,image/gif,image/webp">
+              <img id="imagePreview" class="preview" alt="Preview of the chosen image" hidden>
+            </div>
+            <div>
+              <label for="qAlt">Image description for screen readers <span class="req">(optional, never reveal the answer)</span></label>
+              <textarea id="qAlt" rows="3" maxlength="300"></textarea>
+            </div>
+          </div>
+          <div class="grid2">
+            <div>
+              <label for="qDifficulty">Percentage who get it right (0 to 100)</label>
+              <input id="qDifficulty" type="number" min="0" max="100" step="any" inputmode="decimal" required>
+            </div>
+            <div>
+              <label for="qOrder">Display order (tie-breaker)</label>
+              <input id="qOrder" type="number" min="0" step="1" value="0" inputmode="numeric">
+            </div>
+          </div>
+          <fieldset>
+            <legend>Answers (3 or 4). Mark the correct one.</legend>
+            <div id="answerRows"></div>
+            <div class="actions">
+              <button id="addAnswer" type="button" class="ghost">Add answer</button>
+            </div>
+          </fieldset>
+          <div>
+            <label for="qReason">Why that answer is correct (shown after the question locks)</label>
+            <textarea id="qReason" rows="3" maxlength="600" required></textarea>
+          </div>
+          <p id="formError" class="error" role="alert"></p>
+          <div class="actions">
+            <button id="saveQuestion" type="submit" class="primary">Save question</button>
+            <button id="cancelEdit" type="button" class="ghost" hidden>Cancel edit</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="backup" class="panel" aria-labelledby="backupTitle">
+        <h2 id="backupTitle">Backup and restore</h2>
+        <p class="hint">The free host clears its disk when the app redeploys or restarts. Export the question pack before then, and import it afterwards. Importing replaces every existing question.</p>
+        <div class="actions">
+          <a class="button ghost" href="/api/admin/export" download>Export question pack</a>
+          <button id="importBtn" type="button" class="ghost">Import question pack</button>
+          <input id="importFile" type="file" accept="application/json,.json" hidden>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/dom.js"></script>
+  <script src="/admin.js"></script>
+</body>
+</html>
