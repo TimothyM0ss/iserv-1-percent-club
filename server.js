@@ -130,7 +130,11 @@ function createServer({
     res.json({ ok: true });
   });
 
-  const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_IMAGE_BYTES, files: 1 } });
+  const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_IMAGE_BYTES, files: 5 } }).fields([
+    { name: 'image', maxCount: 1 },
+    ...[0, 1, 2, 3].map((i) => ({ name: `answerImage${i}`, maxCount: 1 })),
+  ]);
+  const answerUploads = (req) => [0, 1, 2, 3].map((i) => req.files?.[`answerImage${i}`]?.[0]?.buffer);
   const parseFields = (req) => {
     try {
       return JSON.parse(req.body?.data ?? '{}');
@@ -140,13 +144,13 @@ function createServer({
   };
 
   api.get('/questions', (req, res) => res.json({ questions: store.list() }));
-  api.post('/questions', upload.single('image'), (req, res) => {
-    store.add(parseFields(req), req.file?.buffer);
+  api.post('/questions', upload, (req, res) => {
+    store.add(parseFields(req), req.files?.image?.[0]?.buffer, answerUploads(req));
     broadcastNow();
     res.status(201).json({ questions: store.list() });
   });
-  api.put('/questions/:id', upload.single('image'), (req, res) => {
-    store.update(req.params.id, parseFields(req), req.file?.buffer);
+  api.put('/questions/:id', upload, (req, res) => {
+    store.update(req.params.id, parseFields(req), req.files?.image?.[0]?.buffer, answerUploads(req));
     broadcastNow();
     res.json({ questions: store.list() });
   });

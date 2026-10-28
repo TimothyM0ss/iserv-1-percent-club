@@ -84,6 +84,10 @@ body.admin .join { background: radial-gradient(ellipse at 50% 40%, var(--felt-li
 .grid2 { display: grid; gap: 16px; grid-template-columns: 1fr; }
 @media (min-width: 720px) { .grid2 { grid-template-columns: 1fr 1fr; } }
 .answer-row { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; margin-bottom: 8px; }
-.answer-row .letter { font-weight: 800; width: 1.5em; }
+.answer-row { margin-bottom: 14px; }
+.answer-image { grid-column: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.answer-image input[type="file"] { width: auto; flex: 1 1 220px; padding: 8px 10px; }
+.answer-image img { width: 72px; height: 48px; object-fit: cover; border-radius: 8px; }
+.answers-cell .thumb { width: 44px; height: 30px; object-fit: cover; border-radius: 4px; vertical-align: middle; margin-right: 6px; }
 .preview { margin-top: 10px; max-width: 100%; max-height: 180px; border-radius: 10px; }
 .q-form .primary:disabled { opacity: 0.6; }

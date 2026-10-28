@@ -250,12 +250,17 @@ document.addEventListener('keydown', (event) => {
   if (button && !button.disabled) button.click();
 });
 
-function answerButton(text, index, question) {
+function answerLabel(answer, index) {
+  return answer.text || `picture answer ${LETTERS[index]}`;
+}
+
+function answerButton(answer, index, question) {
   const reveal = state.phase === 'reveal';
   const mine = me.answer === index;
   const correct = reveal && question.correctIndex === index;
   const wrongPick = reveal && mine && !correct;
   const classes = ['answer'];
+  if (answer.imageUrl) classes.push('has-img');
   let note = null;
   if (correct) { classes.push('correct'); note = '✔ Correct answer'; }
   else if (wrongPick) { classes.push('wrong'); note = '✘ Your answer'; }
@@ -265,8 +270,9 @@ function answerButton(text, index, question) {
   return h(
     'button',
     { type: 'button', class: classes.join(' '), disabled: reveal || me.spectator || me.answer !== null, onclick: () => choose(index) },
+    answer.imageUrl && h('img', { class: 'a-img', src: answer.imageUrl, alt: answer.text ? '' : `Answer ${LETTERS[index]}`, decoding: 'async' }),
     h('span', { class: 'key', 'aria-hidden': 'true' }, LETTERS[index]),
-    h('span', {}, text),
+    h('span', {}, answer.text),
     note && h('span', { class: 'note' }, note),
     reveal && h('span', { class: 'note count' }, `${state.counts[index]} chose this`),
   );
@@ -297,7 +303,7 @@ function questionStage() {
   }
   nodes.push(
     h('img', { class: 'q-img', src: question.imageUrl, alt: question.alt || `Question ${state.number}`, decoding: 'async', fetchpriority: 'high' }),
-    h('div', { class: 'answers', role: 'group', 'aria-label': 'Answers' }, question.answers.map((text, i) => answerButton(text, i, question))),
+    h('div', { class: 'answers', role: 'group', 'aria-label': 'Answers' }, question.answers.map((answer, i) => answerButton(answer, i, question))),
   );
   if (me.spectator && !reveal) nodes.push(h('div', { class: 'banner' }, 'You joined after the game started, so you are watching this one.'));
   if (reveal) {
@@ -354,9 +360,9 @@ function readyStage() {
 
 function announcePhase() {
   if (state.phase === 'question') {
-    announce(`Question ${state.number} of ${state.total}. ${Math.round(state.questionMs / 1000)} seconds. ${state.question.answers.map((a, i) => `${LETTERS[i]}: ${a}`).join('. ')}`);
+    announce(`Question ${state.number} of ${state.total}. ${Math.round(state.questionMs / 1000)} seconds. ${state.question.answers.map((a, i) => `${LETTERS[i]}: ${answerLabel(a, i)}`).join('. ')}`);
   } else if (state.phase === 'reveal') {
-    const correct = state.question.answers[state.question.correctIndex];
+    const correct = answerLabel(state.question.answers[state.question.correctIndex], state.question.correctIndex);
     const outcome = me.spectator ? '' : me.lastResult === 'correct' ? 'You were correct. ' : 'You were not correct. ';
     announce(`${outcome}The answer was ${LETTERS[state.question.correctIndex]}: ${correct}. ${state.question.reason}`);
   } else if (state.phase === 'finished') {

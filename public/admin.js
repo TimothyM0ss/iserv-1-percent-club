@@ -138,6 +138,13 @@ function renderControl() {
   runCountdown();
 }
 
+function answerItem(answer, isCorrect) {
+  return h('li', { class: isCorrect ? 'right' : '' },
+    answer.imageUrl && h('img', { class: 'thumb', src: answer.imageUrl, alt: '' }),
+    answer.text,
+    isCorrect ? ' (correct)' : '');
+}
+
 function renderHostQuestion() {
   const q = state.question;
   if (!q) return $('live-question').replaceChildren();
@@ -146,7 +153,7 @@ function renderHostQuestion() {
       h('img', { src: q.imageUrl, alt: q.alt || 'Current question' }),
       h('div', {},
         h('strong', {}, `Question ${state.number} of ${state.total} (${Number(q.difficulty)}% get it right)`),
-        h('ol', { type: 'A' }, q.answers.map((a, i) => h('li', { class: i === q.correctIndex ? 'right' : '' }, a, i === q.correctIndex ? ' (correct)' : ''))),
+        h('ol', { type: 'A' }, q.answers.map((a, i) => answerItem(a, i === q.correctIndex))),
         h('p', { class: 'hint' }, `Why: ${q.reason}`))));
 }
 
@@ -192,7 +199,7 @@ function renderQuestions() {
     h('td', {}, h('img', { src: q.imageUrl, alt: q.alt || 'Question image' })),
     h('td', {}, `${q.difficulty}%`),
     h('td', {}, String(q.order)),
-    h('td', { class: 'answers-cell' }, h('ol', { type: 'A' }, q.answers.map((a, i) => h('li', { class: i === q.correctIndex ? 'right' : '' }, a, i === q.correctIndex ? ' (correct)' : '')))),
+    h('td', { class: 'answers-cell' }, h('ol', { type: 'A' }, q.answers.map((a, i) => answerItem(a, i === q.correctIndex)))),
     h('td', {}, h('div', { class: 'actions' },
       h('button', { type: 'button', class: 'ghost small', onclick: () => startEdit(q) }, 'Edit'),
       h('button', { type: 'button', class: 'ghost danger small', onclick: () => removeQuestion(q) }, 'Delete'))))));
@@ -226,29 +233,60 @@ async function removeQuestion(q) {
   }
 }
 
-function answerRow(index, text = '', isCorrect = false) {
-  return h('div', { class: 'answer-row' },
-    h('input', { type: 'radio', name: 'correct', value: index, checked: isCorrect, 'aria-label': `Answer ${LETTERS[index]} is correct` }),
-    h('input', { type: 'text', maxlength: 120, 'aria-label': `Answer ${LETTERS[index]}`, placeholder: `Answer ${LETTERS[index]}`, value: text }),
-    h('button', { type: 'button', class: 'ghost small', 'aria-label': `Remove answer ${LETTERS[index]}`, onclick: (e) => removeAnswerRow(e.target.closest('.answer-row')) }, 'Remove'));
+const emptyAnswer = () => ({ text: '', image: null, imageUrl: null });
+
+function answerRow(index, answer = emptyAnswer(), isCorrect = false) {
+  const thumb = h('img', { alt: '', hidden: !answer.imageUrl, src: answer.imageUrl });
+  const file = h('input', {
+    type: 'file',
+    class: 'answer-file',
+    accept: 'image/png,image/jpeg,image/gif,image/webp',
+    onchange: () => {
+      const chosen = file.files[0];
+      if (!chosen) return;
+      thumb.src = URL.createObjectURL(chosen);
+      thumb.hidden = false;
+      clear.hidden = false;
+    },
+  });
+  const clear = h('button', {
+    type: 'button',
+    class: 'ghost small clear-image',
+    hidden: !answer.imageUrl,
+    onclick: () => {
+      file.value = '';
+      row.dataset.image = '';
+      thumb.hidden = true;
+      clear.hidden = true;
+    },
+  }, 'Clear image');
+  const row = h('div', { class: 'answer-row', 'data-image': answer.image ?? '' },
+    h('input', { type: 'radio', name: 'correct', value: index, checked: isCorrect }),
+    h('input', { type: 'text', class: 'answer-text', maxlength: 120, value: answer.text }),
+    h('button', { type: 'button', class: 'ghost small remove-answer', onclick: () => removeAnswerRow(row) }, 'Remove'),
+    h('div', { class: 'answer-image' }, thumb, file, clear));
+  return row;
 }
 
 function renderAnswerRows(answers, correctIndex) {
-  $('answerRows').replaceChildren(...answers.map((text, i) => answerRow(i, text, i === correctIndex)));
+  $('answerRows').replaceChildren(...answers.map((a, i) => answerRow(i, a, i === correctIndex)));
   syncAnswerControls();
 }
 
 function syncAnswerControls() {
   const rows = [...$('answerRows').children];
   rows.forEach((row, i) => {
+    const letter = LETTERS[i];
     row.querySelector('input[type="radio"]').value = i;
-    row.querySelector('input[type="radio"]').setAttribute('aria-label', `Answer ${LETTERS[i]} is correct`);
-    const text = row.querySelector('input[type="text"]');
-    text.setAttribute('aria-label', `Answer ${LETTERS[i]}`);
-    text.placeholder = `Answer ${LETTERS[i]}`;
-    const remove = row.querySelector('button');
+    row.querySelector('input[type="radio"]').setAttribute('aria-label', `Answer ${letter} is correct`);
+    const text = row.querySelector('.answer-text');
+    text.setAttribute('aria-label', `Answer ${letter} text`);
+    text.placeholder = `Answer ${letter} text`;
+    row.querySelector('.answer-file').setAttribute('aria-label', `Answer ${letter} image (optional)`);
+    row.querySelector('.clear-image').setAttribute('aria-label', `Clear answer ${letter} image`);
+    const remove = row.querySelector('.remove-answer');
     remove.disabled = rows.length <= 3;
-    remove.setAttribute('aria-label', `Remove answer ${LETTERS[i]}`);
+    remove.setAttribute('aria-label', `Remove answer ${letter}`);
   });
   $('addAnswer').disabled = rows.length >= 4;
 }
@@ -261,7 +299,7 @@ function removeAnswerRow(row) {
 $('addAnswer').addEventListener('click', () => {
   $('answerRows').append(answerRow($('answerRows').children.length));
   syncAnswerControls();
-  $('answerRows').lastElementChild.querySelector('input[type="text"]').focus();
+  $('answerRows').lastElementChild.querySelector('.answer-text').focus();
 });
 
 $('qImage').addEventListener('change', () => {
@@ -280,7 +318,7 @@ function resetForm() {
   $('cancelEdit').hidden = true;
   $('formError').textContent = '';
   $('imagePreview').hidden = true;
-  renderAnswerRows(['', '', ''], -1);
+  renderAnswerRows([emptyAnswer(), emptyAnswer(), emptyAnswer()], -1);
 }
 
 function startEdit(q) {
@@ -312,7 +350,8 @@ $('questionForm').addEventListener('submit', async (event) => {
 
   if (!editing && !file) return error('Choose an image for the question.');
   if (!$('qDifficulty').value) return error('Enter the percentage who get it right.');
-  if (rows.some((row) => !row.querySelector('input[type="text"]').value.trim())) return error('Fill in every answer, or remove the empty ones.');
+  const hasContent = (row) => row.querySelector('.answer-text').value.trim() || row.dataset.image || row.querySelector('.answer-file').files[0];
+  if (!rows.every(hasContent)) return error('Give every answer some text or an image, or remove the empty ones.');
   if (!checked) return error('Mark one answer as correct.');
   if (!$('qReason').value.trim()) return error('Explain why the answer is correct.');
 
@@ -322,10 +361,14 @@ $('questionForm').addEventListener('submit', async (event) => {
     order: $('qOrder').value,
     alt: $('qAlt').value,
     reason: $('qReason').value,
-    answers: rows.map((row) => row.querySelector('input[type="text"]').value),
+    answers: rows.map((row) => ({ text: row.querySelector('.answer-text').value, image: row.dataset.image || null })),
     correctIndex: Number(checked.value),
   }));
   if (file) form.set('image', file);
+  rows.forEach((row, i) => {
+    const answerFile = row.querySelector('.answer-file').files[0];
+    if (answerFile) form.set(`answerImage${i}`, answerFile);
+  });
 
   $('saveQuestion').disabled = true;
   try {

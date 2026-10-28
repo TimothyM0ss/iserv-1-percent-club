@@ -61,6 +61,10 @@ test('a full game over real sockets', async (t) => {
     const form = new FormData();
     form.set('data', JSON.stringify({ difficulty: 80 - n * 15, order: n, answers: ['a', 'b', 'c', 'd'], correctIndex: 2, reason: 'Because.' }));
     form.set('image', new Blob([PNG]), 'q.png');
+    if (n === 0) {
+      form.set('data', JSON.stringify({ difficulty: 80, order: 0, answers: [{ text: 'a' }, { text: '' }, { text: 'c' }], correctIndex: 2, reason: 'Because.' }));
+      form.set('answerImage1', new Blob([PNG]), 'a.png');
+    }
     const res = await fetch(`${base}/api/admin/questions`, { method: 'POST', headers: { cookie }, body: form });
     assert.equal(res.status, 201);
   }
@@ -72,6 +76,7 @@ test('a full game over real sockets', async (t) => {
   });
   assert.equal(select.status, 200);
   assert.deepEqual(store.list().map((q) => q.difficulty), [80, 65, 50, 35, 20]);
+  assert.match(store.list()[0].answers[1].imageUrl, /^\/uploads\/.+\.png$/);
 
   const noCookie = connect(`${base}/admin`, { autoConnect: true, reconnection: false });
   await new Promise((resolve) => noCookie.on('connect_error', resolve));
