@@ -305,6 +305,15 @@ button.primary:disabled { background: #6b7c73; }
   color: #fff;
   font-weight: 800;
 }
+.answer .a-img {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: clamp(90px, 18vh, 160px);
+  object-fit: contain;
+  border-radius: 8px;
+  background: #eef3f0;
+}
+.answer.has-img { align-content: start; }
 .answer .note { grid-column: 2; font-size: 0.9rem; font-weight: 700; }
 .answer:hover:not(:disabled) { border-color: var(--felt); background: #f0f8f3; transform: translateY(-1px); }
 .answer:active:not(:disabled) { transform: scale(0.98); }
