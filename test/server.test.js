@@ -85,6 +85,10 @@ test('a full game over real sockets', async (t) => {
   const admin = connect(`${base}/admin`, { extraHeaders: { cookie }, transports: ['websocket'] });
   await new Promise((resolve) => admin.on('connect', resolve));
 
+  const screen = connect(`${base}/screen`, { transports: ['websocket'] });
+  const screenLobby = await waitFor(screen, 'state');
+  assert.equal(screenLobby.phase, 'lobby');
+
   const ada = connect(base, { transports: ['websocket'] });
   const bea = connect(base, { transports: ['websocket'] });
   const adaJoin = await emit(ada, 'join', { name: 'Ada' });
@@ -101,9 +105,11 @@ test('a full game over real sockets', async (t) => {
 
   for (let round = 0; round < 5; round += 1) {
     const live = waitFor(ada, 'state', (s) => s.phase === 'question');
+    const onScreen = waitFor(screen, 'state', (s) => s.phase === 'question');
     await emit(admin, 'next');
     const state = await live;
     assert.equal(state.question.correctIndex, undefined);
+    assert.equal((await onScreen).question.correctIndex, undefined);
     assert.equal(state.me.spectator, false);
     await emit(ada, 'answer', { choice: 2 });
     await emit(bea, 'answer', { choice: round === 0 ? 0 : 2 });
@@ -117,5 +123,5 @@ test('a full game over real sockets', async (t) => {
   assert.deepEqual(end.results.winners.map((w) => w.name), ['Ada']);
   assert.equal(end.results.share, 1000);
 
-  for (const s of [admin, ada, bea, late]) s.close();
+  for (const s of [admin, screen, ada, bea, late]) s.close();
 });

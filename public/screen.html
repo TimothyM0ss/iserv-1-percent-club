@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>iServ 1% Club - Big screen</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/screen.css">
+</head>
+<body>
+  <header class="topbar">
+    <p class="brand-sm">The <span>1%</span> Club</p>
+    <div id="pot" class="pot" aria-label="Pot">
+      <span class="pot-label">Pot</span>
+      <span id="potValue" class="pot-value">0</span>
+      <span class="pot-unit">$AGEs</span>
+    </div>
+    <div id="remaining" class="me"></div>
+  </header>
+
+  <div id="connection" class="connection" role="status">Connecting…</div>
+
+  <main class="screen-main">
+    <section id="stage" class="stage screen-stage" aria-label="Question area"></section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/dom.js"></script>
+  <script src="/screen.js"></script>
+</body>
+</html>
