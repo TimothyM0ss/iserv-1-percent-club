@@ -83,6 +83,77 @@ test('export then import round-trips image answers', (t) => {
   assert.equal(uploadedFiles(store), 2);
 });
 
+const abc = [{ text: 'A' }, { text: 'B' }, { text: 'C' }];
+
+test('a question can be text only', (t) => {
+  const store = newStore(t);
+  const q = store.add({ ...fields(abc), text: '  What is 2 + 2?  ' });
+  assert.equal(q.text, 'What is 2 + 2?');
+  assert.equal(q.image, null);
+  assert.equal(store.list()[0].imageUrl, null);
+  assert.equal(uploadedFiles(store), 0);
+});
+
+test('a question with neither text nor image is rejected and leaves no files behind', (t) => {
+  const store = newStore(t);
+  assert.throws(() => store.add(fields(abc), undefined, [PNG]), ValidationError);
+  assert.equal(uploadedFiles(store), 0);
+});
+
+test('question text over the limit is rejected', (t) => {
+  const store = newStore(t);
+  assert.throws(() => store.add({ ...fields(abc), text: 'x'.repeat(301) }), ValidationError);
+});
+
+test('update can clear the image only while text remains', (t) => {
+  const store = newStore(t);
+  const q = store.add(fields(abc), PNG);
+  assert.throws(() => store.update(q.id, { ...fields(abc), clearImage: true }), ValidationError);
+  assert.ok(store.questions[0].image);
+  store.update(q.id, { ...fields(abc), text: 'Now text', clearImage: true });
+  assert.equal(store.questions[0].image, null);
+  assert.equal(uploadedFiles(store), 0);
+});
+
+test('update keeps the image when text is added and nothing is cleared', (t) => {
+  const store = newStore(t);
+  const q = store.add(fields(abc), PNG);
+  store.update(q.id, { ...fields(abc), text: 'Both' });
+  assert.ok(store.questions[0].image);
+  assert.equal(uploadedFiles(store), 1);
+});
+
+test('export then import round-trips a text-only question', (t) => {
+  const store = newStore(t);
+  store.add({ ...fields(abc), text: 'Only words' });
+  store.importPack(JSON.parse(JSON.stringify(store.exportPack())));
+  assert.equal(store.questions[0].text, 'Only words');
+  assert.equal(store.questions[0].image, null);
+});
+
+test('import rejects a question with neither text nor image', (t) => {
+  const store = newStore(t);
+  assert.throws(() => store.importPack({ version: 1, questions: [fields(abc)] }), ValidationError);
+});
+
+test('questions saved before question text existed still load', (t) => {
+  const store = newStore(t);
+  const q = store.add(fields(abc), PNG);
+  const saved = JSON.parse(fs.readFileSync(store.file, 'utf8'));
+  delete saved[0].text;
+  fs.writeFileSync(store.file, JSON.stringify(saved));
+  store.init();
+  assert.equal(store.list()[0].text, '');
+  assert.equal(store.list()[0].image, q.image);
+});
+
+test('game questions expose question text', (t) => {
+  const store = newStore(t);
+  const q = store.add({ ...fields(abc), text: 'Say it' });
+  store.select([q.id]);
+  assert.equal(store.gameQuestions()[0].text, 'Say it');
+});
+
 test('game questions expose answer image urls but no file names', (t) => {
   const store = newStore(t);
   const q = store.add(fields([{ text: 'A' }, { text: 'B' }, { text: '' }]), PNG, [undefined, undefined, PNG]);

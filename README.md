@@ -20,7 +20,7 @@ $env:ADMIN_PASSWORD = "choose-a-long-passphrase"; npm start
 ## Host a game
 
 1. Sign in at `/admin`.
-2. Add questions: image, percentage who get it right, display order, 3 or 4 answers, the correct answer and the reason.
+2. Add questions: text, an image or both, percentage who get it right, display order, 3 or 4 answers, the correct answer and the reason.
 3. Tick exactly five questions under "In game".
 4. Ask players to open the home page and enter a name. Their coins appear around the table.
 5. Select **Start game**. No question shows yet.

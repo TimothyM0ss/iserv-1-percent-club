@@ -49,6 +49,13 @@
 .screen-answer.dim { opacity: 0.6; }
 .screen-answer .count { font-weight: 500; color: var(--ink-soft); }
 
+.screen-stage .q-text { padding: 0.8em 1em; font-size: 1.7em; }
+.screen-answer.text-answer { color: #fff; background: #000; border-color: #000; }
+.screen-answer.text-answer .key { color: #000; background: #fff; }
+.screen-answer.text-answer.correct { background: #000; border-color: #5fd98a; }
+.screen-answer.text-answer.correct .note { color: #7ee2a0; }
+.screen-answer.text-answer .count { color: #d5dfd9; }
+
 .answered { margin: 14px 0 0; text-align: center; font-weight: 700; color: var(--ink-soft); }
 
 .join-url {

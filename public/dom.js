@@ -13,4 +13,10 @@ function h(tag, attrs, ...children) {
   return el;
 }
 
+function questionPrompt(question, number) {
+  return h('div', { class: 'q-prompt' },
+    question.text && h('p', { class: 'q-text' }, question.text),
+    question.imageUrl && h('img', { class: 'q-img', src: question.imageUrl, alt: question.alt || `Question ${number}`, decoding: 'async', fetchpriority: 'high' }));
+}
+
 const formatNumber = (n) => Number(n).toLocaleString('en-GB');

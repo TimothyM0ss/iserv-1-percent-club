@@ -9,6 +9,7 @@ let socket = null;
 let state = null;
 let questions = [];
 let editing = null;
+let keepsQuestionImage = false;
 let noticeTimer = 0;
 let clockOffset = 0;
 let countdown = 0;
@@ -149,10 +150,11 @@ function renderHostQuestion() {
   const q = state.question;
   if (!q) return $('live-question').replaceChildren();
   $('live-question').replaceChildren(
-    h('div', { class: 'host-q' },
-      h('img', { src: q.imageUrl, alt: q.alt || 'Current question' }),
+    h('div', { class: q.imageUrl ? 'host-q' : 'host-q no-img' },
+      q.imageUrl && h('img', { src: q.imageUrl, alt: q.alt || 'Current question' }),
       h('div', {},
         h('strong', {}, `Question ${state.number} of ${state.total} (${Number(q.difficulty)}% get it right)`),
+        q.text && h('p', { class: 'host-q-text' }, q.text),
         h('ol', { type: 'A' }, q.answers.map((a, i) => answerItem(a, i === q.correctIndex))),
         h('p', { class: 'hint' }, `Why: ${q.reason}`))));
 }
@@ -196,7 +198,9 @@ function renderQuestions() {
   $('emptyQuestions').hidden = questions.length > 0;
   $('questionRows').replaceChildren(...questions.map((q) => h('tr', {},
     h('td', {}, h('input', { type: 'checkbox', checked: q.selected, 'aria-label': `Use question ${q.difficulty}% in the game`, disabled: state && state.phase !== 'lobby', onchange: (e) => toggleSelection(q.id, e.target) })),
-    h('td', {}, h('img', { src: q.imageUrl, alt: q.alt || 'Question image' })),
+    h('td', { class: 'question-cell' },
+      q.imageUrl && h('img', { src: q.imageUrl, alt: q.alt || 'Question image' }),
+      q.text && h('span', {}, q.text)),
     h('td', {}, `${q.difficulty}%`),
     h('td', {}, String(q.order)),
     h('td', { class: 'answers-cell' }, h('ol', { type: 'A' }, q.answers.map((a, i) => answerItem(a, i === q.correctIndex)))),
@@ -310,8 +314,17 @@ $('qImage').addEventListener('change', () => {
   preview.hidden = false;
 });
 
+$('clearQImage').addEventListener('click', () => {
+  keepsQuestionImage = false;
+  $('qImage').value = '';
+  $('imagePreview').hidden = true;
+  $('clearQImage').hidden = true;
+});
+
 function resetForm() {
   editing = null;
+  keepsQuestionImage = false;
+  $('clearQImage').hidden = true;
   $('questionForm').reset();
   $('formTitle').textContent = 'Add a question';
   $('saveQuestion').textContent = 'Save question';
@@ -328,12 +341,15 @@ function startEdit(q) {
   $('cancelEdit').hidden = false;
   $('formError').textContent = '';
   $('qImage').value = '';
+  $('qText').value = q.text;
   $('qAlt').value = q.alt;
   $('qDifficulty').value = q.difficulty;
   $('qOrder').value = q.order;
   $('qReason').value = q.reason;
-  $('imagePreview').src = q.imageUrl;
-  $('imagePreview').hidden = false;
+  keepsQuestionImage = Boolean(q.imageUrl);
+  if (q.imageUrl) $('imagePreview').src = q.imageUrl;
+  $('imagePreview').hidden = !q.imageUrl;
+  $('clearQImage').hidden = !q.imageUrl;
   renderAnswerRows(q.answers, q.correctIndex);
   $('questionForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
   $('qDifficulty').focus({ preventScroll: true });
@@ -348,7 +364,7 @@ $('questionForm').addEventListener('submit', async (event) => {
   const file = $('qImage').files[0];
   const error = (message) => { $('formError').textContent = message; };
 
-  if (!editing && !file) return error('Choose an image for the question.');
+  if (!$('qText').value.trim() && !file && !keepsQuestionImage) return error('Give the question some text, an image, or both.');
   if (!$('qDifficulty').value) return error('Enter the percentage who get it right.');
   const hasContent = (row) => row.querySelector('.answer-text').value.trim() || row.dataset.image || row.querySelector('.answer-file').files[0];
   if (!rows.every(hasContent)) return error('Give every answer some text or an image, or remove the empty ones.');
@@ -357,6 +373,8 @@ $('questionForm').addEventListener('submit', async (event) => {
 
   const form = new FormData();
   form.set('data', JSON.stringify({
+    text: $('qText').value,
+    clearImage: Boolean(editing) && !keepsQuestionImage,
     difficulty: $('qDifficulty').value,
     order: $('qOrder').value,
     alt: $('qAlt').value,

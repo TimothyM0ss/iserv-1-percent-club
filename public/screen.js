@@ -54,6 +54,7 @@ function answerCard(answer, index) {
   const reveal = state.phase === 'reveal';
   const correct = reveal && state.question.correctIndex === index;
   const classes = ['screen-answer'];
+  if (answer.text) classes.push('text-answer');
   if (correct) classes.push('correct');
   else if (reveal) classes.push('dim');
   return h(
@@ -79,7 +80,7 @@ function questionStage() {
       h('span', { class: 'timer-text', id: 'timerText' })));
   }
   nodes.push(h('div', { class: 'screen-body' },
-    h('img', { class: 'q-img', src: question.imageUrl, alt: question.alt || `Question ${state.number}`, decoding: 'async' }),
+    questionPrompt(question, state.number),
     h('div', { class: 'screen-answers' }, question.answers.map(answerCard))));
   if (reveal) nodes.push(h('div', { class: 'banner' }, h('strong', {}, 'Why'), h('p', {}, question.reason)));
   else nodes.push(h('p', { class: 'answered', id: 'answered' }));
