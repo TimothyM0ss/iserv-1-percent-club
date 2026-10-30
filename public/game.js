@@ -261,6 +261,7 @@ function answerButton(answer, index, question) {
   const wrongPick = reveal && mine && !correct;
   const classes = ['answer'];
   if (answer.imageUrl) classes.push('has-img');
+  if (answer.text) classes.push('text-answer');
   let note = null;
   if (correct) { classes.push('correct'); note = '✔ Correct answer'; }
   else if (wrongPick) { classes.push('wrong'); note = '✘ Your answer'; }
@@ -302,7 +303,7 @@ function questionStage() {
       h('span', { class: 'timer-text', id: 'timerText' })));
   }
   nodes.push(
-    h('img', { class: 'q-img', src: question.imageUrl, alt: question.alt || `Question ${state.number}`, decoding: 'async', fetchpriority: 'high' }),
+    questionPrompt(question, state.number),
     h('div', { class: 'answers', role: 'group', 'aria-label': 'Answers' }, question.answers.map((answer, i) => answerButton(answer, i, question))),
   );
   if (me.spectator && !reveal) nodes.push(h('div', { class: 'banner' }, 'You joined after the game started, so you are watching this one.'));

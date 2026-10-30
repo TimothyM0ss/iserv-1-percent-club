@@ -62,7 +62,7 @@
             <thead>
               <tr>
                 <th scope="col">In game</th>
-                <th scope="col">Image</th>
+                <th scope="col">Question</th>
                 <th scope="col">% right</th>
                 <th scope="col">Order</th>
                 <th scope="col">Answers</th>
@@ -76,11 +76,16 @@
 
         <form id="questionForm" class="q-form" novalidate>
           <h3 id="formTitle">Add a question</h3>
+          <div>
+            <label for="qText">Question text <span class="req">(up to 300 characters, shown as white text on black. Optional if you add an image)</span></label>
+            <textarea id="qText" rows="3" maxlength="300"></textarea>
+          </div>
           <div class="grid2">
             <div>
-              <label for="qImage">Question image <span class="req">(PNG, JPEG, GIF or WebP, 3 MB max)</span></label>
+              <label for="qImage">Question image <span class="req">(optional if you add text. PNG, JPEG, GIF or WebP, 3 MB max)</span></label>
               <input id="qImage" type="file" accept="image/png,image/jpeg,image/gif,image/webp">
               <img id="imagePreview" class="preview" alt="Preview of the chosen image" hidden>
+              <button id="clearQImage" type="button" class="ghost small" hidden>Clear image</button>
             </div>
             <div>
               <label for="qAlt">Image description for screen readers <span class="req">(optional, never reveal the answer)</span></label>
