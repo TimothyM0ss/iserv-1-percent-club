@@ -324,7 +324,7 @@ function lobbyStage() {
     h('p', { class: 'pulse-dots' }, 'Waiting for the host to start the game'),
     h('ul', { class: 'rules' },
       h('li', {}, 'Five questions, each harder than the last.'),
-      h('li', {}, 'You have 20 seconds per question. Late answers do not count.'),
+      h('li', {}, 'You have 60 seconds per question. Late answers do not count.'),
       h('li', {}, 'A wrong answer sends your 1,000 $AGEs to the pot. You can play on but cannot win.'),
       h('li', {}, 'Answer all five correctly to share the pot.'),
       h('li', {}, 'Keys 1 to 4, or A to D, pick an answer.')));
