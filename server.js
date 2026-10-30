@@ -33,7 +33,7 @@ function safeEqual(a, b) {
 function createServer({
   adminPassword,
   dataDir = path.join(__dirname, 'data'),
-  questionMs = 30000,
+  questionMs = 20000,
   production = process.env.NODE_ENV === 'production',
 } = {}) {
   const store = new Store(dataDir);

@@ -129,7 +129,7 @@ function renderControl() {
   $('controlHint').textContent = {
     lobby: s.selectedCount === SELECTION_SIZE ? 'Waiting for players. Start when everyone is in. Anyone arriving after the start can only watch.' : `Select ${SELECTION_SIZE} questions below to enable the start button (${s.selectedCount} selected).`,
     ready: 'No question is visible yet. Show the first one when you are ready.',
-    question: 'Answers lock automatically after 30 seconds, then the answer and reason appear.',
+    question: 'Answers lock automatically after 20 seconds, then the answer and reason appear.',
     reveal: 'Answer and reason are on screen. Show the next one when you are ready.',
     finished: 'Use "Reset to lobby" to play again with everyone who is still connected.',
   }[s.phase];

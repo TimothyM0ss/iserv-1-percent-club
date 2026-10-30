@@ -17,7 +17,7 @@ const fiveQuestions = () => [1, 2, 3, 4, 5].map(question);
 
 function newGame() {
   const clock = { time: 0 };
-  const game = new Game({ now: () => clock.time, questionMs: 30000 });
+  const game = new Game({ now: () => clock.time, questionMs: 20000 });
   return { game, clock };
 }
 
@@ -88,7 +88,7 @@ test('answers after the deadline are rejected', () => {
   const { player } = game.join('Ada');
   game.start(fiveQuestions());
   game.next();
-  clock.time = 30001;
+  clock.time = 20001;
   assert.match(game.answer(player.id, 1).error, /locked/);
 });
 

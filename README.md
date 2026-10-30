@@ -24,7 +24,7 @@ $env:ADMIN_PASSWORD = "choose-a-long-passphrase"; npm start
 3. Tick exactly five questions under "In game".
 4. Ask players to open the home page and enter a name. Their coins appear around the table.
 5. Select **Start game**. No question shows yet.
-6. Select **Show question 1**. Each question locks after 30 seconds and then shows the answer and reason.
+6. Select **Show question 1**. Each question locks after 20 seconds and then shows the answer and reason.
 7. After question 5, select **Show results**. Select **Reset to lobby** to play again.
 
 ### Show the game on a big screen
@@ -38,7 +38,7 @@ Teams video runs a few seconds behind the server. Tell players to watch their ow
 | Rule | Behaviour |
 |---|---|
 | Question order | Highest "% who get it right" first (easiest), lowest last. Display order breaks ties. |
-| Answer timing | The server clock decides. An answer after 30 seconds is rejected. |
+| Answer timing | The server clock decides. An answer after 20 seconds is rejected. |
 | Answering | The first answer is final. No answer counts as wrong. |
 | Wrong answer | The player's 1,000 $AGEs go to the pot once. They can play on but cannot win. |
 | Winners | Players with 5 out of 5 split the pot equally, rounded down. With no winners, the pot is unclaimed. |
