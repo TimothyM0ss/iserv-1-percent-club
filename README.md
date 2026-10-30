@@ -27,6 +27,12 @@ $env:ADMIN_PASSWORD = "choose-a-long-passphrase"; npm start
 6. Select **Show question 1**. Each question locks after 30 seconds and then shows the answer and reason.
 7. After question 5, select **Show results**. Select **Reset to lobby** to play again.
 
+### Show the game on a big screen
+
+Open `/screen` on the host's machine and share that window in Teams. It shows the join address, the pot, the timer, each question with its answers, and the reveal. It has no controls and never shows the answer before the question locks. Players still answer in their own browser at the home page.
+
+Teams video runs a few seconds behind the server. Tell players to watch their own screen for the timer. The shared screen is for context.
+
 ### Rules the game enforces
 
 | Rule | Behaviour |

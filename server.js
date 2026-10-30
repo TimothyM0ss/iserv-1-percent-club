@@ -57,6 +57,8 @@ function createServer({
   const server = http.createServer(app);
   const io = new Server(server, { maxHttpBufferSize: 1e4 });
   const adminIo = io.of('/admin');
+  const screenIo = io.of('/screen');
+  const screenState = () => ({ ...game.screenView(), serverNow: Date.now() });
 
   let broadcastTimer = null;
   const broadcastNow = () => {
@@ -71,6 +73,7 @@ function createServer({
       serverNow: Date.now(),
       selectedCount: store.selectedCount,
     });
+    screenIo.emit('state', screenState());
   };
   const game = new Game({
     questionMs,
@@ -211,6 +214,8 @@ function createServer({
       if (id && !stillOpen) game.setConnected(id, false);
     });
   });
+
+  screenIo.on('connection', (socket) => socket.emit('state', screenState()));
 
   adminIo.use((socket, next) => {
     if (isAdmin(socket.handshake.headers.cookie)) return next();
