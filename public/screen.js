@@ -92,6 +92,8 @@ function lobbyStage() {
     h('h2', {}, 'Join the game'),
     h('p', {}, 'Open this address in your browser and enter a name:'),
     h('p', { class: 'join-url' }, location.origin),
+    h('p', {}, 'Or scan this QR code:'),
+    h('img', { class: 'join-qr', src: '/join-qr.png', alt: 'QR code to join the game', width: 200, height: 200 }),
     h('p', {}, `${names.length} ${names.length === 1 ? 'player is' : 'players are'} in the room`),
     h('ul', { class: 'names', 'aria-label': 'Players' }, names.map((name) => h('li', {}, name))));
 }
