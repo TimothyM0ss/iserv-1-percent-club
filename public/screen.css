@@ -62,6 +62,16 @@
   font-weight: 800;
   word-break: break-all;
 }
+.join-qr {
+  display: block;
+  margin: 8px auto 16px;
+  width: clamp(160px, 28vh, 260px);
+  height: auto;
+  image-rendering: pixelated;
+  background: #fff;
+  padding: 8px;
+  border-radius: 12px;
+}
 .names { list-style: none; padding: 0; margin: 16px 0 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .names li { padding: 4px 14px; border-radius: 999px; background: #eef3f0; color: var(--ink); font-weight: 600; }
 .screen-stage .board-wrap { max-height: 40vh; }
