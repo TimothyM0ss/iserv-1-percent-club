@@ -20,11 +20,11 @@ $env:ADMIN_PASSWORD = "choose-a-long-passphrase"; npm start
 ## Host a game
 
 1. Sign in at `/admin`.
-2. Add questions: text, an image or both, percentage who get it right, display order, 3 or 4 answers, the correct answer and the reason.
+2. Add questions: text, an image or both, percentage who get it right, display order, 2 to 4 answers (or one typed answer), the correct answer and the reason.
 3. Tick exactly five questions under "In game".
 4. Ask players to open the home page and enter a name. Their coins appear around the table.
 5. Select **Start game**. No question shows yet.
-6. Select **Show question 1**. Each question locks after 60 seconds and then shows the answer and reason.
+6. Select **Show question 1**. Each question locks after 40 seconds (`QUESTION_SECONDS` in `lib/config.js`) and then shows the answer and reason.
 7. After question 5, select **Show results**. Select **Reset to lobby** to play again.
 
 ### Show the game on a big screen
@@ -38,7 +38,7 @@ Teams video runs a few seconds behind the server. Tell players to watch their ow
 | Rule | Behaviour |
 |---|---|
 | Question order | Highest "% who get it right" first (easiest), lowest last. Display order breaks ties. |
-| Answer timing | The server clock decides. An answer after 60 seconds is rejected. |
+| Answer timing | The server clock decides. An answer after 40 seconds is rejected. A typed answer matches if it has the same letters and numbers as the correct answer, in any order and any case. |
 | Answering | The first answer is final. No answer counts as wrong. |
 | Wrong answer | The player's 1,000 $AGEs go to the pot once. They can play on but cannot win. |
 | Winners | Players with 5 out of 5 split the pot equally, rounded down. With no winners, the pot is unclaimed. |

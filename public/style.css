@@ -338,6 +338,12 @@ button.primary:disabled { background: #6b7c73; }
 .answer.dim { opacity: 0.7; }
 .answer .count { font-weight: 500; color: var(--ink-soft); }
 
+.typed { display: grid; gap: 10px; }
+.typed input[type="text"] { font-size: 1.25rem; font-weight: 600; }
+.typed input[type="text"]:disabled { background: #eef1ee; }
+.typed-note { margin: 10px 0 0; font-weight: 700; }
+.typed-correct { color: var(--good); }
+
 .answer.text-answer { color: #fff; background: #000; border-color: #000; }
 .answer.text-answer .key { color: #000; background: #fff; }
 .answer.text-answer:hover:not(:disabled) { background: #000; border-color: var(--gold); }

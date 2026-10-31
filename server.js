@@ -7,6 +7,7 @@ const express = require('express');
 const helmet = require('helmet');
 const multer = require('multer');
 const { Server } = require('socket.io');
+const { QUESTION_MS } = require('./lib/config');
 const { Game } = require('./lib/game');
 const { Store, ValidationError } = require('./lib/store');
 
@@ -33,7 +34,7 @@ function safeEqual(a, b) {
 function createServer({
   adminPassword,
   dataDir = path.join(__dirname, 'data'),
-  questionMs = 60000,
+  questionMs = QUESTION_MS,
   production = process.env.NODE_ENV === 'production',
 } = {}) {
   const store = new Store(dataDir);
@@ -203,7 +204,7 @@ function createServer({
 
     socket.on('answer', (payload, ack) => {
       const reply = typeof ack === 'function' ? ack : () => {};
-      const result = game.answer(socket.data.playerId, payload?.choice);
+      const result = game.answer(socket.data.playerId, payload?.text ?? payload?.choice);
       reply(result.error ? { ok: false, error: result.error } : { ok: true });
       if (!result.error) socket.emit('me', game.meView(socket.data.playerId));
     });

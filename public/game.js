@@ -222,7 +222,7 @@ function runTimer() {
       announce(`${LOW_SECONDS} seconds left`);
     }
     if (remaining === 0) {
-      document.querySelectorAll('.answer').forEach((b) => { b.disabled = true; });
+      document.querySelectorAll('.answer, .typed input, .typed button').forEach((b) => { b.disabled = true; });
       return;
     }
     timerFrame = requestAnimationFrame(tick);
@@ -230,12 +230,12 @@ function runTimer() {
   tick();
 }
 
-function choose(index) {
+function lockIn(value) {
   if (me.spectator || me.answer !== null || state.phase !== 'question' || remainingMs() === 0) return;
-  me.answer = index;
+  me.answer = value;
   announce('Answer locked in');
   renderStage();
-  socket.emit('answer', { choice: index }, (result) => {
+  socket.emit('answer', typeof value === 'string' ? { text: value } : { choice: value }, (result) => {
     if (result.ok) return;
     me.answer = null;
     renderStage();
@@ -244,7 +244,7 @@ function choose(index) {
 }
 
 document.addEventListener('keydown', (event) => {
-  if (event.ctrlKey || event.metaKey || event.altKey || !joined) return;
+  if (event.ctrlKey || event.metaKey || event.altKey || !joined || event.target.closest('input, textarea')) return;
   const index = '1234'.includes(event.key) ? Number(event.key) - 1 : 'abcd'.indexOf(event.key.toLowerCase());
   const button = index >= 0 && event.key.length === 1 ? document.querySelectorAll('.answer')[index] : null;
   if (button && !button.disabled) button.click();
@@ -270,13 +270,37 @@ function answerButton(answer, index, question) {
   if (correct && mine) note = '✔ Correct answer, and yours';
   return h(
     'button',
-    { type: 'button', class: classes.join(' '), disabled: reveal || me.spectator || me.answer !== null, onclick: () => choose(index) },
+    { type: 'button', class: classes.join(' '), disabled: reveal || me.spectator || me.answer !== null, onclick: () => lockIn(index) },
     answer.imageUrl && h('img', { class: 'a-img', src: answer.imageUrl, alt: answer.text ? '' : `Answer ${LETTERS[index]}`, decoding: 'async' }),
     h('span', { class: 'key', 'aria-hidden': 'true' }, LETTERS[index]),
     h('span', {}, answer.text),
     note && h('span', { class: 'note' }, note),
     reveal && h('span', { class: 'note count' }, `${state.counts[index]} chose this`),
   );
+}
+
+function typedAnswer(question) {
+  const reveal = state.phase === 'reveal';
+  const locked = reveal || me.spectator || me.answer !== null;
+  const input = h('input', {
+    type: 'text',
+    maxlength: 120,
+    autocomplete: 'off',
+    autocapitalize: 'off',
+    spellcheck: 'false',
+    'aria-label': 'Type your answer',
+    placeholder: 'Type your answer',
+    value: me.answer ?? '',
+    disabled: locked,
+  });
+  const players = state.players.filter((p) => !p.spectator).length;
+  return h('div', {},
+    h('form', { class: 'typed', onsubmit: (event) => { event.preventDefault(); if (input.value.trim()) lockIn(input.value.trim()); } },
+      input,
+      h('button', { type: 'submit', class: 'primary', disabled: locked }, 'Lock in answer')),
+    !reveal && me.answer !== null && h('p', { class: 'typed-note' }, 'Locked in'),
+    reveal && h('p', { class: 'typed-note typed-correct' }, `✔ Correct answer: ${question.correctText}`),
+    reveal && h('p', { class: 'typed-note' }, `${state.correctCount} of ${players} players got this right`));
 }
 
 function resultBanner() {
@@ -304,7 +328,9 @@ function questionStage() {
   }
   nodes.push(
     questionPrompt(question, state.number),
-    h('div', { class: 'answers', role: 'group', 'aria-label': 'Answers' }, question.answers.map((answer, i) => answerButton(answer, i, question))),
+    question.kind === 'text'
+      ? typedAnswer(question)
+      : h('div', { class: 'answers', role: 'group', 'aria-label': 'Answers' }, question.answers.map((answer, i) => answerButton(answer, i, question))),
   );
   if (me.spectator && !reveal) nodes.push(h('div', { class: 'banner' }, 'You joined after the game started, so you are watching this one.'));
   if (reveal) {
@@ -324,10 +350,11 @@ function lobbyStage() {
     h('p', { class: 'pulse-dots' }, 'Waiting for the host to start the game'),
     h('ul', { class: 'rules' },
       h('li', {}, 'Five questions, each harder than the last.'),
-      h('li', {}, 'You have 60 seconds per question. Late answers do not count.'),
+      h('li', {}, `You have ${toSeconds(state.questionMs)} seconds per question. Late answers do not count.`),
       h('li', {}, 'A wrong answer sends your 1,000 $AGEs to the pot. You can play on but cannot win.'),
       h('li', {}, 'Answer all five correctly to share the pot.'),
-      h('li', {}, 'Keys 1 to 4, or A to D, pick an answer.')));
+      h('li', {}, 'Keys 1 to 4, or A to D, pick an answer.'),
+      h('li', {}, 'Some questions ask you to type your answer. Capitals do not matter and the letters can be in any order.')));
 }
 
 function finishedStage() {
@@ -360,12 +387,15 @@ function readyStage() {
 }
 
 function announcePhase() {
+  const typed = state.question?.kind === 'text';
   if (state.phase === 'question') {
-    announce(`Question ${state.number} of ${state.total}. ${Math.round(state.questionMs / 1000)} seconds. ${state.question.answers.map((a, i) => `${LETTERS[i]}: ${answerLabel(a, i)}`).join('. ')}`);
+    const options = typed ? 'Type your answer.' : state.question.answers.map((a, i) => `${LETTERS[i]}: ${answerLabel(a, i)}`).join('. ');
+    announce(`Question ${state.number} of ${state.total}. ${toSeconds(state.questionMs)} seconds. ${options}`);
   } else if (state.phase === 'reveal') {
-    const correct = answerLabel(state.question.answers[state.question.correctIndex], state.question.correctIndex);
+    const { correctIndex, correctText, answers, reason } = state.question;
+    const correct = typed ? `The answer was ${correctText}.` : `The answer was ${LETTERS[correctIndex]}: ${answerLabel(answers[correctIndex], correctIndex)}.`;
     const outcome = me.spectator ? '' : me.lastResult === 'correct' ? 'You were correct. ' : 'You were not correct. ';
-    announce(`${outcome}The answer was ${LETTERS[state.question.correctIndex]}: ${correct}. ${state.question.reason}`);
+    announce(`${outcome}${correct} ${reason}`);
   } else if (state.phase === 'finished') {
     announce('Game over. Final scores are on screen.');
   } else if (state.phase === 'ready') {

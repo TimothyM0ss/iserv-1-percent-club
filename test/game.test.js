@@ -2,7 +2,8 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { Game } = require('../lib/game');
+const { Game, matchesTextAnswer } = require('../lib/game');
+const { QUESTION_SECONDS } = require('../lib/config');
 
 const question = (n) => ({
   id: `q${n}`,
@@ -160,4 +161,61 @@ test('next cannot skip a live question', () => {
   game.next();
   assert.ok(game.next().error);
   game.lock();
+});
+
+test('question time defaults to 40 seconds from the shared config', () => {
+  assert.equal(QUESTION_SECONDS, 40);
+  assert.equal(new Game().questionMs, 40000);
+});
+
+test('a typed answer ignores case and letter order', () => {
+  assert.ok(matchesTextAnswer('LISTEN', 'silent'));
+  assert.ok(matchesTextAnswer('  Sil ent ', 'Listen'));
+  assert.ok(matchesTextAnswer('York New', 'New York'));
+  assert.ok(!matchesTextAnswer('listens', 'silent'));
+  assert.ok(!matchesTextAnswer('', 'silent'));
+  assert.ok(!matchesTextAnswer('!!!', '???'));
+});
+
+const typedQuestion = (n) => ({ ...question(n), kind: 'text', answers: [], correctIndex: null, correctText: 'Silent' });
+
+function typedGame() {
+  const { game } = newGame();
+  const { player } = game.join('Ada');
+  game.start([typedQuestion(1), ...[2, 3, 4, 5].map(question)]);
+  game.next();
+  return { game, player };
+}
+
+test('a typed answer that matches scores and a wrong one is eliminated', () => {
+  const { game } = newGame();
+  const ada = game.join('Ada').player;
+  const bea = game.join('Bea').player;
+  game.start([typedQuestion(1), ...[2, 3, 4, 5].map(question)]);
+  game.next();
+  assert.ok(game.answer(ada.id, ' listen ').ok);
+  assert.ok(game.answer(bea.id, 'candle').ok);
+  game.lock();
+  assert.equal(game.meView(ada.id).lastResult, 'correct');
+  assert.equal(game.meView(bea.id).lastResult, 'wrong');
+  assert.equal(game.pot, 1000);
+  assert.equal(game.publicView().correctCount, 1);
+});
+
+test('a typed question rejects a choice and a choice question rejects text', () => {
+  const { game, player } = typedGame();
+  assert.ok(game.answer(player.id, 1).error);
+  assert.ok(game.answer(player.id, '   ').error);
+  game.lock();
+  game.next();
+  assert.ok(game.answer(player.id, 'silent').error);
+});
+
+test('the typed answer stays hidden until reveal', () => {
+  const { game, player } = typedGame();
+  assert.equal(game.publicView().question.correctText, undefined);
+  assert.equal(game.publicView().question.kind, 'text');
+  game.answer(player.id, 'silent');
+  game.lock();
+  assert.equal(game.publicView().question.correctText, 'Silent');
 });
