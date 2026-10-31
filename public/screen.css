@@ -56,6 +56,10 @@
 .screen-answer.text-answer.correct .note { color: #7ee2a0; }
 .screen-answer.text-answer .count { color: #d5dfd9; }
 
+.screen-typed { padding: 1em 1.2em; font-size: 1.4em; font-weight: 600; background: #fff; border: 3px solid #7c8c83; border-radius: 14px; }
+.screen-typed p { margin: 0.3em 0; }
+.screen-typed .screen-typed-answer { font-size: 1.5em; font-weight: 800; color: var(--good); }
+
 .answered { margin: 14px 0 0; text-align: center; font-weight: 700; color: var(--ink-soft); }
 
 .join-url {

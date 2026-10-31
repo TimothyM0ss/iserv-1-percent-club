@@ -102,8 +102,19 @@
               <input id="qOrder" type="number" min="0" step="1" value="0" inputmode="numeric">
             </div>
           </div>
-          <fieldset>
-            <legend>Answers (3 or 4). Each can be text, an image, or both. Mark the correct one.</legend>
+          <div>
+            <label for="qKind">Question type</label>
+            <select id="qKind">
+              <option value="choice">Multiple choice</option>
+              <option value="text">Typed answer</option>
+            </select>
+          </div>
+          <div id="typedFields" hidden>
+            <label for="qCorrectText">Correct answer <span class="req">(players type it. Capitals do not matter, and the letters can be in any order)</span></label>
+            <input id="qCorrectText" type="text" maxlength="120" autocomplete="off">
+          </div>
+          <fieldset id="choiceFields">
+            <legend>Answers (2 to 4). Each can be text, an image, or both. Mark the correct one.</legend>
             <p class="hint">Add text to every image answer where you can. Screen readers use it, and it shows under the image.</p>
             <div id="answerRows"></div>
             <div class="actions">

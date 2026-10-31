@@ -68,6 +68,16 @@ function answerCard(answer, index) {
   );
 }
 
+function typedPanel() {
+  const { question } = state;
+  if (state.phase !== 'reveal') {
+    return h('div', { class: 'screen-typed' }, h('p', {}, 'Type your answer on your own screen.'));
+  }
+  return h('div', { class: 'screen-typed' },
+    h('p', { class: 'screen-typed-answer' }, `✔ ${question.correctText}`),
+    h('p', {}, `${state.correctCount} of ${contestants().length} players got this right`));
+}
+
 function questionStage() {
   const { question } = state;
   const reveal = state.phase === 'reveal';
@@ -81,7 +91,7 @@ function questionStage() {
   }
   nodes.push(h('div', { class: 'screen-body' },
     questionPrompt(question, state.number),
-    h('div', { class: 'screen-answers' }, question.answers.map(answerCard))));
+    question.kind === 'text' ? typedPanel() : h('div', { class: 'screen-answers' }, question.answers.map(answerCard))));
   if (reveal) nodes.push(h('div', { class: 'banner' }, h('strong', {}, 'Why'), h('p', {}, question.reason)));
   else nodes.push(h('p', { class: 'answered', id: 'answered' }));
   return h('div', {}, nodes);

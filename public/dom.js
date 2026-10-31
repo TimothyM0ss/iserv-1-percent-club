@@ -20,3 +20,5 @@ function questionPrompt(question, number) {
 }
 
 const formatNumber = (n) => Number(n).toLocaleString('en-GB');
+
+const toSeconds = (ms) => Math.round(ms / 1000);

@@ -3,6 +3,8 @@
 const $ = (id) => document.getElementById(id);
 const LETTERS = 'ABCD';
 const SELECTION_SIZE = 5;
+const MIN_ANSWERS = 2;
+const MAX_ANSWERS = 4;
 const PHASES = { lobby: 'Lobby', ready: 'Started', question: 'Question live', reveal: 'Answer shown', finished: 'Finished' };
 
 let socket = null;
@@ -129,7 +131,7 @@ function renderControl() {
   $('controlHint').textContent = {
     lobby: s.selectedCount === SELECTION_SIZE ? 'Waiting for players. Start when everyone is in. Anyone arriving after the start can only watch.' : `Select ${SELECTION_SIZE} questions below to enable the start button (${s.selectedCount} selected).`,
     ready: 'No question is visible yet. Show the first one when you are ready.',
-    question: 'Answers lock automatically after 60 seconds, then the answer and reason appear.',
+    question: `Answers lock automatically after ${toSeconds(s.questionMs)} seconds, then the answer and reason appear.`,
     reveal: 'Answer and reason are on screen. Show the next one when you are ready.',
     finished: 'Use "Reset to lobby" to play again with everyone who is still connected.',
   }[s.phase];
@@ -146,6 +148,11 @@ function answerItem(answer, isCorrect) {
     isCorrect ? ' (correct)' : '');
 }
 
+function answerList(q) {
+  if (q.kind === 'text') return h('p', { class: 'right' }, `Typed answer: ${q.correctText}`);
+  return h('ol', { type: 'A' }, q.answers.map((a, i) => answerItem(a, i === q.correctIndex)));
+}
+
 function renderHostQuestion() {
   const q = state.question;
   if (!q) return $('live-question').replaceChildren();
@@ -155,7 +162,7 @@ function renderHostQuestion() {
       h('div', {},
         h('strong', {}, `Question ${state.number} of ${state.total} (${Number(q.difficulty)}% get it right)`),
         q.text && h('p', { class: 'host-q-text' }, q.text),
-        h('ol', { type: 'A' }, q.answers.map((a, i) => answerItem(a, i === q.correctIndex))),
+        answerList(q),
         h('p', { class: 'hint' }, `Why: ${q.reason}`))));
 }
 
@@ -203,7 +210,7 @@ function renderQuestions() {
       q.text && h('span', {}, q.text)),
     h('td', {}, `${q.difficulty}%`),
     h('td', {}, String(q.order)),
-    h('td', { class: 'answers-cell' }, h('ol', { type: 'A' }, q.answers.map((a, i) => answerItem(a, i === q.correctIndex)))),
+    h('td', { class: 'answers-cell' }, answerList(q)),
     h('td', {}, h('div', { class: 'actions' },
       h('button', { type: 'button', class: 'ghost small', onclick: () => startEdit(q) }, 'Edit'),
       h('button', { type: 'button', class: 'ghost danger small', onclick: () => removeQuestion(q) }, 'Delete'))))));
@@ -289,11 +296,19 @@ function syncAnswerControls() {
     row.querySelector('.answer-file').setAttribute('aria-label', `Answer ${letter} image (optional)`);
     row.querySelector('.clear-image').setAttribute('aria-label', `Clear answer ${letter} image`);
     const remove = row.querySelector('.remove-answer');
-    remove.disabled = rows.length <= 3;
+    remove.disabled = rows.length <= MIN_ANSWERS;
     remove.setAttribute('aria-label', `Remove answer ${letter}`);
   });
-  $('addAnswer').disabled = rows.length >= 4;
+  $('addAnswer').disabled = rows.length >= MAX_ANSWERS;
 }
+
+function syncKind() {
+  const typed = $('qKind').value === 'text';
+  $('typedFields').hidden = !typed;
+  $('choiceFields').hidden = typed;
+}
+
+$('qKind').addEventListener('change', syncKind);
 
 function removeAnswerRow(row) {
   row.remove();
@@ -331,6 +346,7 @@ function resetForm() {
   $('cancelEdit').hidden = true;
   $('formError').textContent = '';
   $('imagePreview').hidden = true;
+  syncKind();
   renderAnswerRows([emptyAnswer(), emptyAnswer(), emptyAnswer()], -1);
 }
 
@@ -346,11 +362,14 @@ function startEdit(q) {
   $('qDifficulty').value = q.difficulty;
   $('qOrder').value = q.order;
   $('qReason').value = q.reason;
+  $('qKind').value = q.kind;
+  $('qCorrectText').value = q.correctText;
+  syncKind();
   keepsQuestionImage = Boolean(q.imageUrl);
   if (q.imageUrl) $('imagePreview').src = q.imageUrl;
   $('imagePreview').hidden = !q.imageUrl;
   $('clearQImage').hidden = !q.imageUrl;
-  renderAnswerRows(q.answers, q.correctIndex);
+  renderAnswerRows(q.kind === 'text' ? [emptyAnswer(), emptyAnswer(), emptyAnswer()] : q.answers, q.correctIndex);
   $('questionForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
   $('qDifficulty').focus({ preventScroll: true });
 }
@@ -366,27 +385,33 @@ $('questionForm').addEventListener('submit', async (event) => {
 
   if (!$('qText').value.trim() && !file && !keepsQuestionImage) return error('Give the question some text, an image, or both.');
   if (!$('qDifficulty').value) return error('Enter the percentage who get it right.');
+  const typed = $('qKind').value === 'text';
   const hasContent = (row) => row.querySelector('.answer-text').value.trim() || row.dataset.image || row.querySelector('.answer-file').files[0];
-  if (!rows.every(hasContent)) return error('Give every answer some text or an image, or remove the empty ones.');
-  if (!checked) return error('Mark one answer as correct.');
+  if (typed && !$('qCorrectText').value.trim()) return error('Enter the correct answer players should type.');
+  if (!typed && !rows.every(hasContent)) return error('Give every answer some text or an image, or remove the empty ones.');
+  if (!typed && !checked) return error('Mark one answer as correct.');
   if (!$('qReason').value.trim()) return error('Explain why the answer is correct.');
 
   const form = new FormData();
   form.set('data', JSON.stringify({
+    kind: $('qKind').value,
+    correctText: $('qCorrectText').value,
     text: $('qText').value,
     clearImage: Boolean(editing) && !keepsQuestionImage,
     difficulty: $('qDifficulty').value,
     order: $('qOrder').value,
     alt: $('qAlt').value,
     reason: $('qReason').value,
-    answers: rows.map((row) => ({ text: row.querySelector('.answer-text').value, image: row.dataset.image || null })),
-    correctIndex: Number(checked.value),
+    answers: typed ? [] : rows.map((row) => ({ text: row.querySelector('.answer-text').value, image: row.dataset.image || null })),
+    correctIndex: typed ? null : Number(checked.value),
   }));
   if (file) form.set('image', file);
-  rows.forEach((row, i) => {
-    const answerFile = row.querySelector('.answer-file').files[0];
-    if (answerFile) form.set(`answerImage${i}`, answerFile);
-  });
+  if (!typed) {
+    rows.forEach((row, i) => {
+      const answerFile = row.querySelector('.answer-file').files[0];
+      if (answerFile) form.set(`answerImage${i}`, answerFile);
+    });
+  }
 
   $('saveQuestion').disabled = true;
   try {

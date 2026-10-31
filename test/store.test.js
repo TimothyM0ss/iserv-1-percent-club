@@ -162,3 +162,52 @@ test('game questions expose answer image urls but no file names', (t) => {
   assert.deepEqual(Object.keys(game.answers[2]).sort(), ['imageUrl', 'text']);
   assert.match(game.answers[2].imageUrl, /^\/uploads\//);
 });
+
+test('a question needs between two and four answers', (t) => {
+  const store = newStore(t);
+  const base = { ...fields([]), text: 'Q' };
+  assert.throws(() => store.add({ ...base, answers: [{ text: 'A' }] }), ValidationError);
+  assert.ok(store.add({ ...base, answers: [{ text: 'A' }, { text: 'B' }] }));
+  assert.throws(() => store.add({ ...base, answers: Array(5).fill({ text: 'A' }) }), ValidationError);
+});
+
+const typed = { kind: 'text', text: 'Unscramble: TNLISE', difficulty: 50, correctText: 'Silent', reason: 'Because.' };
+
+test('a typed question needs a correct answer and no choices', (t) => {
+  const store = newStore(t);
+  const q = store.add(typed);
+  assert.equal(q.kind, 'text');
+  assert.deepEqual(q.answers, []);
+  assert.equal(q.correctText, 'Silent');
+  assert.throws(() => store.add({ ...typed, correctText: '  ' }), ValidationError);
+  assert.throws(() => store.add({ ...typed, correctText: '?!' }), ValidationError);
+});
+
+test('typed questions round-trip through export and game questions', (t) => {
+  const store = newStore(t);
+  const q = store.add(typed);
+  store.importPack(JSON.parse(JSON.stringify(store.exportPack())));
+  assert.equal(store.questions[0].correctText, 'Silent');
+  store.select([store.questions[0].id]);
+  assert.equal(store.gameQuestions()[0].kind, 'text');
+  assert.equal(q.kind, 'text');
+});
+
+test('switching a question to typed removes its answer images', (t) => {
+  const store = newStore(t);
+  const q = store.add(fields([{ text: 'A' }, { text: 'B' }]), PNG, [PNG]);
+  assert.equal(uploadedFiles(store), 2);
+  store.update(q.id, { ...typed, clearImage: true });
+  assert.equal(uploadedFiles(store), 0);
+});
+
+test('questions saved before typed answers existed load as multiple choice', (t) => {
+  const store = newStore(t);
+  store.add({ ...fields(abc), text: 'Old' });
+  const saved = JSON.parse(fs.readFileSync(store.file, 'utf8'));
+  delete saved[0].kind;
+  delete saved[0].correctText;
+  fs.writeFileSync(store.file, JSON.stringify(saved));
+  store.init();
+  assert.equal(store.list()[0].kind, 'choice');
+});
