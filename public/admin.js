@@ -110,7 +110,7 @@ function renderControl() {
     stat('Phase', PHASES[s.phase]),
     stat('Players', s.contestants),
     stat('Spectators', spectators),
-    stat('Pot ($AGEs)', s.pot.toLocaleString('en-GB')),
+    stat('Pot (SAGE$)', s.pot.toLocaleString('en-GB')),
   ];
   if (s.phase === 'question' || s.phase === 'reveal') {
     stats.push(stat('Question', `${s.number} of ${s.total}`));

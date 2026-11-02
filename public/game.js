@@ -118,7 +118,7 @@ function renderMe() {
   }
   $('me').replaceChildren(
     chip(`Score ${me.score}/${state.total}`, '', `Score ${me.score} out of ${state.total}`),
-    chip(`${formatNumber(me.credit)} $AGEs`, me.credit ? 'credit' : 'credit out', me.credit ? 'Credit 1,000 $AGEs' : 'Credit 0 $AGEs, you are out of the pot'),
+    chip(`${formatNumber(me.credit)} SAGE$`, me.credit ? 'credit' : 'credit out', me.credit ? 'Credit 1,000 SAGE$' : 'Credit 0 SAGE$, you are out of the pot'),
   );
 }
 
@@ -138,7 +138,7 @@ function buildCoin(player) {
   return h(
     'div',
     { class: `coin-wrap${mine ? ' mine' : ''}`, title: player.name },
-    h('div', { class: 'coin' }, '1,000', h('small', {}, '$AGEs')),
+    h('div', { class: 'coin' }, '1,000', h('small', {}, 'SAGE$')),
     h('span', { class: 'coin-name' }, mine ? `${player.name} (you)` : player.name),
   );
 }
@@ -180,7 +180,7 @@ function flyToPot(el, index) {
   el.remove();
   if (reducedMotion.matches) return;
   const target = $('potValue').getBoundingClientRect();
-  const clone = h('div', { class: 'coin flying' }, '1,000', h('small', {}, '$AGEs'));
+  const clone = h('div', { class: 'coin flying' }, '1,000', h('small', {}, 'SAGE$'));
   clone.style.setProperty('--coin', `${from.width}px`);
   clone.style.left = `${from.left}px`;
   clone.style.top = `${from.top}px`;
@@ -312,7 +312,7 @@ function resultBanner() {
     return h('div', { class: 'banner good' }, h('strong', {}, 'Correct!'), h('p', {}, detail));
   }
   const lead = me.answer === null ? "Time's up. No answer counts as wrong." : 'Not quite.';
-  return h('div', { class: 'banner bad' }, h('strong', {}, lead), h('p', {}, `Your ${formatNumber(state.stake)} $AGEs are in the pot. You can play on, but you can no longer win.`));
+  return h('div', { class: 'banner bad' }, h('strong', {}, lead), h('p', {}, `Your ${formatNumber(state.stake)} SAGE$ are in the pot. You can play on, but you can no longer win.`));
 }
 
 function questionStage() {
@@ -351,7 +351,7 @@ function lobbyStage() {
     h('ul', { class: 'rules' },
       h('li', {}, 'Five questions, each harder than the last.'),
       h('li', {}, `You have ${toSeconds(state.questionMs)} seconds per question. Late answers do not count.`),
-      h('li', {}, 'A wrong answer sends your 1,000 $AGEs to the pot. You can play on but cannot win.'),
+      h('li', {}, 'A wrong answer sends your 1,000 SAGE$ to the pot. You can play on but cannot win.'),
       h('li', {}, 'Answer all five correctly to share the pot.'),
       h('li', {}, 'Keys 1 to 4, or A to D, pick an answer.'),
       h('li', {}, 'Some questions ask you to type your answer. Capitals do not matter and the letters can be in any order.')));
@@ -361,11 +361,11 @@ function finishedStage() {
   const { results } = state;
   const won = results.winners.some((w) => w.name === me.name);
   let heading = 'Game over';
-  let detail = `${results.winners.length} ${results.winners.length === 1 ? 'player' : 'players'} cleared all five. Each takes ${formatNumber(results.share)} of the ${formatNumber(results.pot)} $AGEs in the pot.`;
-  if (won) heading = `You won ${formatNumber(results.share)} $AGEs!`;
+  let detail = `${results.winners.length} ${results.winners.length === 1 ? 'player' : 'players'} cleared all five. Each takes ${formatNumber(results.share)} of the ${formatNumber(results.pot)} SAGE$ in the pot.`;
+  if (won) heading = `You won ${formatNumber(results.share)} SAGE$!`;
   if (!results.winners.length) {
     heading = 'Nobody cleared all five';
-    detail = `The pot of ${formatNumber(results.pot)} $AGEs goes unclaimed.`;
+    detail = `The pot of ${formatNumber(results.pot)} SAGE$ goes unclaimed.`;
   }
   return h('div', { class: 'center' },
     h('h2', {}, heading),

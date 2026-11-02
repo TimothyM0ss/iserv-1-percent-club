@@ -14,9 +14,12 @@
     <div id="pot" class="pot" aria-label="Pot">
       <span class="pot-label">Pot</span>
       <span id="potValue" class="pot-value">0</span>
-      <span class="pot-unit">$AGEs</span>
+      <span class="pot-unit">SAGE$</span>
     </div>
-    <div id="remaining" class="me"></div>
+    <div class="me">
+      <span id="remaining"></span>
+      <button id="sound" type="button" class="chip sound-toggle">Turn sound on</button>
+    </div>
   </header>
 
   <div id="connection" class="connection" role="status">Connecting…</div>
@@ -27,6 +30,8 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/dom.js"></script>
+  <script src="/fireworks.js"></script>
+  <script src="/ticker.js"></script>
   <script src="/screen.js"></script>
 </body>
 </html>
