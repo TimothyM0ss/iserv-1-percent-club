@@ -46,9 +46,16 @@ function runTimer() {
     $('timerText').textContent = remaining > 0 ? `${seconds}s` : 'Locked';
     $('timer').classList.toggle('low', seconds <= LOW_SECONDS);
     if (remaining > 0) timerFrame = requestAnimationFrame(tick);
+    else Ticker.stop();
   };
   tick();
 }
+
+$('sound').addEventListener('click', async (event) => {
+  await Ticker.setOn(!Ticker.isOn);
+  event.currentTarget.textContent = Ticker.isOn ? 'Turn sound off' : 'Turn sound on';
+  if (Ticker.isOn && state?.phase === 'question') Ticker.start(remainingMs());
+});
 
 function answerCard(answer, index) {
   const reveal = state.phase === 'reveal';
@@ -119,8 +126,8 @@ function finishedStage() {
   const { results } = state;
   const heading = results.winners.length ? 'Game over' : 'Nobody cleared all five';
   const detail = results.winners.length
-    ? `${results.winners.length} ${results.winners.length === 1 ? 'player' : 'players'} cleared all five. Each takes ${formatNumber(results.share)} of the ${formatNumber(results.pot)} $AGEs in the pot.`
-    : `The pot of ${formatNumber(results.pot)} $AGEs goes unclaimed.`;
+    ? `${results.winners.length} ${results.winners.length === 1 ? 'player' : 'players'} cleared all five. Each takes ${formatNumber(results.share)} of the ${formatNumber(results.pot)} SAGE$ in the pot.`
+    : `The pot of ${formatNumber(results.pot)} SAGE$ goes unclaimed.`;
   return h('div', { class: 'center' },
     h('h2', {}, heading),
     h('p', {}, detail),
@@ -140,7 +147,13 @@ function render() {
     stageKey = key;
     const builders = { lobby: lobbyStage, ready: readyStage, question: questionStage, reveal: questionStage, finished: finishedStage };
     $('stage').replaceChildren(builders[state.phase]());
-    if (state.phase === 'question') runTimer();
+    if (state.phase === 'question') {
+      runTimer();
+      Ticker.start(remainingMs());
+    } else {
+      Ticker.stop();
+    }
+    if (state.phase === 'reveal' && state.isLast && state.correctCount > 0) Fireworks.launch();
   }
   const answered = $('answered');
   if (answered) answered.textContent = `${state.answered} of ${state.contestants} players have answered`;
